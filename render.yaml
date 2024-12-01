@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: baymax-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn baymax_flask_api:app
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: NOTION_API_KEY
+        sync: false
