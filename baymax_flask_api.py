@@ -18,15 +18,14 @@ def baymax_endpoint():
         command = data.get("command", "")
         if not command:
             return jsonify({"error": "No command provided"}), 400
-            
+        
         response = baymax.process_command(command)
         return jsonify({"result": response})
+    
     except Exception as e:
         print("Error:", str(e))
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    # Set the port from Render's environment variable (default to 5000 if not set)
-    port = int(os.environ.get("PORT", 5000))
-    # Run the app with host and port for deployment
-    app.run(host="0.0.0.0", port=port, debug=False)
+    # Use 0.0.0.0 to bind to all IPs for Render deployment
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=False)
