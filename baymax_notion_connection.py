@@ -1,33 +1,27 @@
 import os
 from notion_client import Client
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 
 # Load environment variables
 load_dotenv()
 
 class BaymaxNotion:
     def __init__(self):
-        self.notion = Client(auth=os.getenv('NOTION_API_KEY'))
+        # Initialize Notion client
+        self.notion = Client(auth=os.getenv("NOTION_API_KEY"))
+
+        # Define database IDs
         self.database_ids = {
-            'tasks': 'your-tasks-database-id',
-            'inbox': 'your-inbox-database-id'
+            'tasks': 'your-tasks-database-id',  # Replace with your Notion Tasks database ID
+            'inbox': 'your-inbox-database-id'   # Replace with your Notion Inbox database ID
         }
 
-    def query_tasks_for_today(self):
-        """Fetch tasks due today."""
-        # Implement Notion API query logic for today's tasks
-        return "Tasks for today are not yet implemented."
-
-    def query_tasks_for_week(self):
-        """Fetch tasks for the week."""
-        # Implement Notion API query logic for weekly tasks
-        return "Tasks for this week are not yet implemented."
-
     def create_inbox_entry(self, content):
-        """Add a task or note to the inbox."""
+        """Create a new inbox entry in Notion."""
         try:
             response = self.notion.pages.create(
-                parent={"database_id": self.database_ids['inbox']},
+                parent={"database_id": self.database_ids["inbox"]},
                 properties={
                     "Title": {"title": [{"text": {"content": content}}]},
                     "Status": {"select": {"name": "New"}}
@@ -37,6 +31,63 @@ class BaymaxNotion:
         except Exception as e:
             return f"Error adding to inbox: {str(e)}"
 
+    def query_tasks_for_today(self):
+        """Fetch tasks due today."""
+        try:
+            today_date = datetime.now().strftime('%Y-%m-%d')
+            response = self.notion.databases.query(
+                database_id=self.database_ids['tasks'],
+                filter={
+                    "property": "Due Date",
+                    "date": {
+                        "equals": today_date
+                    }
+                }
+            )
+
+            if not response["results"]:
+                return "No tasks found for today."
+
+            tasks = [task["properties"]["Title"]["title"][0]["text"]["content"] for task in response["results"]]
+            return f"Tasks for today: {', '.join(tasks)}"
+        except Exception as e:
+            return f"Error fetching tasks for today: {str(e)}"
+
+    def query_tasks_for_week(self):
+        """Fetch tasks due this week."""
+        try:
+            today = datetime.now()
+            start_of_week = today - timedelta(days=today.weekday())
+            end_of_week = start_of_week + timedelta(days=6)
+
+            response = self.notion.databases.query(
+                database_id=self.database_ids['tasks'],
+                filter={
+                    "and": [
+                        {
+                            "property": "Due Date",
+                            "date": {
+                                "on_or_after": start_of_week.strftime('%Y-%m-%d')
+                            }
+                        },
+                        {
+                            "property": "Due Date",
+                            "date": {
+                                "on_or_before": end_of_week.strftime('%Y-%m-%d')
+                            }
+                        }
+                    ]
+                }
+            )
+
+            if not response["results"]:
+                return "No tasks found for this week."
+
+            tasks = [task["properties"]["Title"]["title"][0]["text"]["content"] for task in response["results"]]
+            return f"Tasks for this week: {', '.join(tasks)}"
+        except Exception as e:
+            return f"Error fetching tasks for this week: {str(e)}"
+
     def process_command(self, command):
         """Process natural language commands dynamically."""
         command = command.lower()
@@ -44,9 +95,9 @@ class BaymaxNotion:
         # Handle task queries
         if "show tasks" in command:
             if "this week" in command:
-                return self.query_tasks_for_week()  # Fetch tasks for the week
+                return self.query_tasks_for_week()
             elif "today" in command:
-                return self.query_tasks_for_today()  # Fetch tasks for today
+                return self.query_tasks_for_today()
             else:
                 return "Error: Please specify 'today' or 'this week' for tasks."
 
