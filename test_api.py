@@ -1,7 +1,7 @@
 import requests
 
-# Replace this URL with your Render public URL when live
-url = "http://127.0.0.1:10000/baymax"
+# Replace this with your live Render URL
+url = "https://baymax-flask-api.onrender.com/baymax"
 headers = {'Content-Type': 'application/json'}
 
 # Test commands
