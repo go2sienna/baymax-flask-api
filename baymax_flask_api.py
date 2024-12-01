@@ -1,7 +1,16 @@
 import os
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
-from baymax_notion_connection import BaymaxNotion
+
+# Placeholder for Notion functionality
+class BaymaxNotion:
+    def process_command(self, command):
+        if "Add to inbox" in command:
+            return f"Added to inbox: {command.replace('Add to inbox:', '').strip()}"
+        elif "Show my tasks" in command:
+            return f"Here are your tasks for this week."
+        else:
+            return f"Unknown command: {command}"
 
 # Load .env variables
 load_dotenv()
@@ -13,19 +22,13 @@ baymax = BaymaxNotion()
 def baymax_endpoint():
     try:
         data = request.get_json(force=True)
-        print("Received data:", data)
-        
         command = data.get("command", "")
         if not command:
             return jsonify({"error": "No command provided"}), 400
-        
         response = baymax.process_command(command)
         return jsonify({"result": response})
-    
     except Exception as e:
-        print("Error:", str(e))
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    # Use 0.0.0.0 to bind to all IPs for Render deployment
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=False)
+    app.run(debug=True, host='0.0.0.0', port=10000)
