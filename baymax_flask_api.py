@@ -26,4 +26,7 @@ def baymax_endpoint():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Set the port from Render's environment variable (default to 5000 if not set)
+    port = int(os.environ.get("PORT", 5000))
+    # Run the app with host and port for deployment
+    app.run(host="0.0.0.0", port=port, debug=False)
